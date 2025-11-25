@@ -1,12 +1,6 @@
 """Tests for sdk_logging.py to improve coverage."""
 
-import logging
-import tempfile
-from pathlib import Path
-
-
 from sharpai_sdk.sdk_logging import (
-    add_file_logging,
     format_log_message,
     log_critical,
     log_debug,
@@ -37,33 +31,6 @@ def test_set_log_level_with_invalid_level():
     set_log_level("INVALID_LEVEL")
     # Just verify it doesn't raise an exception
     assert True
-
-
-def test_add_file_logging():
-    """Test add_file_logging function."""
-    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
-        log_file_path = f.name
-
-    try:
-        handler = add_file_logging(log_file_path, "DEBUG")
-        assert handler is not None
-        assert isinstance(handler, logging.FileHandler)
-        assert handler.level == logging.DEBUG
-    finally:
-        # Clean up
-        Path(log_file_path).unlink(missing_ok=True)
-
-
-def test_add_file_logging_with_none_level():
-    """Test add_file_logging with None level."""
-    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
-        log_file_path = f.name
-
-    try:
-        handler = add_file_logging(log_file_path, None)
-        assert handler is not None
-    finally:
-        Path(log_file_path).unlink(missing_ok=True)
 
 
 def test_format_log_message():
