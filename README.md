@@ -1,41 +1,80 @@
-# Python SDK for SharpAI
+<div align="center">
 
-SharpAI is a Python SDK for interacting with SharpAI API endpoints, providing support for both Ollama-compatible and OpenAI-compatible APIs. The SDK enables seamless integration with AI models for embeddings, text generation, and chat completions.
+  <img src="https://github.com/jchristn/sharpai/blob/main/assets/logo.png" width="256" height="256">
 
-## Features
+</div>
 
-- **Ollama-compatible API support** - Full support for Ollama API endpoints
-- **OpenAI-compatible API support** - Compatible with OpenAI API format
-- **Model management** - List, pull, and delete models
-- **Embeddings generation** - Generate embeddings for text using various models
-- **Text completions** - Generate text completions from prompts
-- **Chat completions** - Interactive chat with AI models
-- **Connectivity validation** - Verify API connectivity
-- **Built-in retry mechanism** - Automatic retry on failed requests
-- **Comprehensive error handling** - Detailed error messages and exception types
-- **Comprehensive logging system** - Built-in logging for debugging
+# SharpAI.Sdk
 
-## Requirements
+**A Python SDK for interacting with SharpAI server instances - providing Ollama and OpenAI compatible API wrappers for local AI inference.**
 
-- Python 3.8 or higher
+<p align="center">
 
-### Dependencies
+  <img src="https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white" />
 
-- `httpx`: For making HTTP requests
-- `pydantic`: For data validation and serialization
-- `typing`: For type hints
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" />
 
-## Installation
+</p>
 
-### From PyPI (when available)
+<p align="center">
+
+  <a href="https://pypi.org/project/sharpai-sdk-python/">
+
+    <img src="https://img.shields.io/pypi/v/sharpai-sdk-python.svg?style=flat" alt="PyPI Version">
+
+  </a>
+
+  &nbsp;
+
+  <a href="https://pypi.org/project/sharpai-sdk-python">
+
+    <img src="https://img.shields.io/pypi/dm/sharpai-sdk-python.svg" alt="PyPI Downloads">
+
+  </a>
+
+</p>
+
+<p align="center">
+
+  <strong>A Python SDK for SharpAI - Local AI inference with Ollama and OpenAI compatible APIs</strong>
+
+</p>
+
+<p align="center">
+
+  Embeddings • Completions • Chat • Model Management • Streaming Support
+
+</p>
+
+**IMPORTANT** - SharpAI.Sdk assumes you have deployed the SharpAI REST server. If you are integrating a SharpAI library directly into your code, use of this SDK is not necessary.
+
+---
+
+## 🚀 Features
+
+- **Ollama API Compatibility** - Full support for Ollama API endpoints and models
+- **OpenAI API Compatibility** - Complete OpenAI API compatibility for seamless integration
+- **Model Management** - Download, list, and delete models with progress tracking
+- **Multiple Inference Types**:
+  - Text embeddings generation
+  - Text completions (streaming and non-streaming)
+  - Chat completions (streaming and non-streaming)
+- **Streaming Support** - Real-time token streaming for completions and chat
+- **Async/Await Support** - Full async/await support for all operations
+- **Error Handling** - Comprehensive error handling with detailed exception types
+- **Configurable Logging** - Built-in request/response logging capabilities
+- **Connectivity Validation** - Verify API connectivity before operations
+- **Built-in Retry Mechanism** - Automatic retry on failed requests
+
+## 📦 Installation
+
+Install SharpAI.Sdk via pip:
 
 ```bash
 pip install sharpai-sdk-python
 ```
 
-### Development Installation
-
-For development, install the package in editable mode:
+Or for development, install the package in editable mode:
 
 ```bash
 git clone <repository-url>
@@ -43,7 +82,19 @@ cd sharpai-sdk-python
 pip install -e .
 ```
 
-## Quick Start
+### Requirements
+
+- Python 3.8 or higher
+
+### Dependencies
+
+- `httpx`: For making HTTP requests
+- `pydantic`: For data validation and serialization
+- `typing`: For type hints (built-in)
+
+## 🚀 Quick Start
+
+### Basic Usage
 
 ```python
 from sharpai_sdk import configure, Connectivity, Ollama, OpenAI
@@ -84,7 +135,24 @@ chat = OpenAI.create_chat_completion(
 print(f"Response: {chat.choices[0].message.content}")
 ```
 
-## Configuration
+### With Logging
+
+```python
+from sharpai_sdk import configure
+from sharpai_sdk.sdk_logging import set_log_level
+
+# Configure the SDK
+configure(
+    endpoint="http://localhost:8000",
+    timeout=30,
+    retries=3,
+)
+
+# Enable debug logging
+set_log_level("DEBUG")
+```
+
+## ⚙️ Configuration
 
 SharpAI SDK uses a simple configuration approach. No authentication tokens, tenant GUIDs, or access keys are required.
 
@@ -98,7 +166,34 @@ configure(
 )
 ```
 
-## API Endpoints Reference
+### Timeout Configuration
+
+```python
+from sharpai_sdk import configure
+
+configure(
+    endpoint="http://localhost:8000",
+    timeout=60,    # 60 seconds timeout
+    retries=5,      # 5 retry attempts
+)
+```
+
+### Logging Configuration
+
+```python
+from sharpai_sdk import configure
+from sharpai_sdk.sdk_logging import set_log_level, log_info
+
+# Set logging level
+set_log_level("DEBUG")
+
+# Add log
+log_info("INFO", "This is an info message")
+```
+
+Available log levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+
+## 📖 API Reference
 
 ### Connectivity Operations
 
@@ -137,7 +232,7 @@ configure(
 - `OpenAICompletionResponse`: Response model for text completions (OpenAI)
 - `OpenAIChatCompletionResponse`: Response model for chat completions (OpenAI)
 
-## Usage Examples
+## 🔧 Ollama API Methods
 
 ### Connectivity Validation
 
@@ -154,7 +249,7 @@ else:
     print("✗ Failed to connect to SharpAI API")
 ```
 
-### Ollama API
+### Model Management
 
 #### List Models
 
@@ -199,7 +294,7 @@ from sharpai_sdk import configure, Ollama
 
 configure(endpoint="http://localhost:8000")
 
-# Generate text completion
+# Non-streaming completion
 completion = Ollama.generate(
     model="QuantFactory/Qwen2.5-3B-GGUF",
     prompt="What is artificial intelligence?",
@@ -210,6 +305,21 @@ completion = Ollama.generate(
     },
 )
 print(f"Completion: {completion.response}")
+
+# Streaming completion
+print("Streaming completion:")
+for chunk in Ollama.generate(
+    model="QuantFactory/Qwen2.5-3B-GGUF",
+    prompt="What is artificial intelligence?",
+    stream=True,
+    options={
+        "num_predict": 100,
+        "temperature": 0.8,
+    },
+):
+    if chunk.response:
+        print(chunk.response, end="", flush=True)
+print()  # New line after streaming
 ```
 
 #### Generate Chat Completion
@@ -219,7 +329,7 @@ from sharpai_sdk import configure, Ollama
 
 configure(endpoint="http://localhost:8000")
 
-# Generate chat completion
+# Non-streaming chat completion
 chat = Ollama.chat(
     model="QuantFactory/Qwen2.5-3B-GGUF",
     messages=[
@@ -234,9 +344,27 @@ chat = Ollama.chat(
 )
 if chat.message and chat.message.content:
     print(f"Response: {chat.message.content}")
+
+# Streaming chat completion
+print("Streaming chat:")
+for chunk in Ollama.chat(
+    model="QuantFactory/Qwen2.5-3B-GGUF",
+    messages=[
+        {"role": "system", "content": "You are a helpful AI assistant."},
+        {"role": "user", "content": "What is Python?"},
+    ],
+    stream=True,
+    options={
+        "num_predict": 100,
+        "temperature": 0.8,
+    },
+):
+    if chunk.message and chunk.message.content:
+        print(chunk.message.content, end="", flush=True)
+print()  # New line after streaming
 ```
 
-#### Model Management
+#### Pulling Models
 
 ```python
 from sharpai_sdk import configure, Ollama
@@ -244,17 +372,45 @@ from sharpai_sdk import configure, Ollama
 configure(endpoint="http://localhost:8000")
 
 # Pull a model from registry
-pull_response = Ollama.pull_model(model="all-minilm")
+pull_response = Ollama.pull_model(model="TheBloke/Llama-2-7B-Chat-GGUF")
 print("Model pull initiated")
+
+# Note: The pull_model method returns a dictionary with status information
+# For streaming progress updates, you may need to check the response periodically
+```
+
+#### Listing Models
+
+```python
+from sharpai_sdk import configure, Ollama
+
+configure(endpoint="http://localhost:8000")
+
+# List all available models
+models = Ollama.list_models()
+if models and models.models:
+    print(f"Found {len(models.models)} models:")
+    for model in models.models:
+        print(f"  - {model.name}")
+        if hasattr(model, 'size') and model.size:
+            print(f"    Size: {model.size} bytes")
+```
+
+#### Deleting Models
+
+```python
+from sharpai_sdk import configure, Ollama
+
+configure(endpoint="http://localhost:8000")
 
 # Delete a model
 delete_response = Ollama.delete_model(name="llama3")
 print("Model deleted")
 ```
 
-### OpenAI-Compatible API
+## 🤖 OpenAI API Methods
 
-#### Create Embeddings
+### Create Embeddings
 
 ```python
 from sharpai_sdk import configure, OpenAI
@@ -284,7 +440,7 @@ from sharpai_sdk import configure, OpenAI
 
 configure(endpoint="http://localhost:8000")
 
-# Create completion for a single prompt
+# Non-streaming completion
 completion = OpenAI.create_completion(
     model="QuantFactory/Qwen2.5-3B-GGUF",
     prompt="Write a brief explanation of machine learning in simple terms.",
@@ -298,6 +454,19 @@ completion = OpenAI.create_completion(
     stop=["###", "END"],
 )
 print(f"Completion: {completion.choices[0].text}")
+
+# Streaming completion
+print("Streaming completion:")
+for chunk in OpenAI.create_completion(
+    model="QuantFactory/Qwen2.5-3B-GGUF",
+    prompt="Write a brief explanation of machine learning in simple terms.",
+    max_tokens=150,
+    temperature=0.7,
+    stream=True,
+):
+    if chunk.choices and chunk.choices[0].text:
+        print(chunk.choices[0].text, end="", flush=True)
+print()  # New line after streaming
 
 # Create completions for multiple prompts
 completions = OpenAI.create_completion(
