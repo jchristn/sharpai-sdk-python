@@ -489,7 +489,7 @@ from sharpai_sdk import configure, OpenAI
 
 configure(endpoint="http://localhost:8000")
 
-# Create chat completion
+# Non-streaming chat completion
 chat = OpenAI.create_chat_completion(
     model="QuantFactory/Qwen2.5-3B-GGUF",
     messages=[
@@ -519,9 +519,150 @@ if chat.choices:
     message = chat.choices[0].message
     print(f"Role: {message.role}")
     print(f"Content: {message.content}")
+
+# Streaming chat completion
+print("Streaming chat:")
+for chunk in OpenAI.create_chat_completion(
+    model="QuantFactory/Qwen2.5-3B-GGUF",
+    messages=[
+        {
+            "role": "system",
+            "content": "You are a helpful assistant specializing in technical topics.",
+        },
+        {
+            "role": "user",
+            "content": "Explain how neural networks work, briefly",
+        },
+    ],
+    temperature=0.7,
+    max_tokens=1000,
+    stream=True,
+):
+    if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+print()  # New line after streaming
 ```
 
-## Error Handling
+## 🌊 Streaming Support
+
+Both Ollama and OpenAI APIs support streaming for real-time token generation:
+
+### Ollama Streaming
+
+```python
+from sharpai_sdk import configure, Ollama
+
+configure(endpoint="http://localhost:8000")
+
+# Streaming text completion
+print("Streaming completion:")
+for chunk in Ollama.generate(
+    model="QuantFactory/Qwen2.5-3B-GGUF",
+    prompt="Write a story about",
+    stream=True,
+    options={
+        "num_predict": 200,
+        "temperature": 0.8,
+    },
+):
+    if chunk.response:
+        print(chunk.response, end="", flush=True)
+print()  # New line after streaming
+
+# Streaming chat completion
+print("Streaming chat:")
+for chunk in Ollama.chat(
+    model="QuantFactory/Qwen2.5-3B-GGUF",
+    messages=[
+        {"role": "user", "content": "Tell me a joke"}
+    ],
+    stream=True,
+    options={
+        "num_predict": 150,
+        "temperature": 0.7,
+    },
+):
+    if chunk.message and chunk.message.content:
+        print(chunk.message.content, end="", flush=True)
+print()  # New line after streaming
+```
+
+### OpenAI Streaming
+
+```python
+from sharpai_sdk import configure, OpenAI
+
+configure(endpoint="http://localhost:8000")
+
+# Streaming text completion
+print("Streaming completion:")
+for chunk in OpenAI.create_completion(
+    model="QuantFactory/Qwen2.5-3B-GGUF",
+    prompt="Write a story about",
+    max_tokens=200,
+    temperature=0.8,
+    stream=True,
+):
+    if chunk.choices and chunk.choices[0].text:
+        print(chunk.choices[0].text, end="", flush=True)
+print()  # New line after streaming
+
+# Streaming chat completion
+print("Streaming chat:")
+for chunk in OpenAI.create_chat_completion(
+    model="QuantFactory/Qwen2.5-3B-GGUF",
+    messages=[
+        {"role": "user", "content": "Tell me a joke"}
+    ],
+    max_tokens=150,
+    temperature=0.7,
+    stream=True,
+):
+    if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+print()  # New line after streaming
+```
+
+## 🗄️ Model Management
+
+SharpAI.Sdk provides comprehensive model management capabilities:
+
+### Pulling Models
+
+```python
+from sharpai_sdk import configure, Ollama
+
+configure(endpoint="http://localhost:8000")
+
+# Pull a model from registry
+pull_response = Ollama.pull_model(model="TheBloke/Llama-2-7B-Chat-GGUF")
+print("Model pull initiated")
+print(f"Response: {pull_response}")
+```
+
+### Listing Models
+
+```python
+from sharpai_sdk import configure, Ollama
+
+configure(endpoint="http://localhost:8000")
+
+# List all available models
+models = Ollama.list_models()
+if models and models.models:
+    print(f"Found {len(models.models)} models:")
+    for model in models.models:
+        print(f"  - {model.name}")
+        if hasattr(model, 'size') and model.size:
+            print(f"    Size: {model.size} bytes")
+        if hasattr(model, 'details') and model.details:
+            if hasattr(model.details, 'format'):
+                print(f"    Format: {model.details.format}")
+            if hasattr(model.details, 'family'):
+                print(f"    Family: {model.details.family}")
+```
+
+## ⚠️ Error Handling
 
 The SDK includes comprehensive error handling with specific exception types:
 
@@ -539,7 +680,7 @@ The SDK includes comprehensive error handling with specific exception types:
 - `TimeoutError`: Request timeout
 - `SdkException`: Base SDK exception
 
-Example error handling:
+The SDK handles errors gracefully with specific exception types. Example error handling:
 
 ```python
 from sharpai_sdk import Ollama
@@ -547,42 +688,16 @@ from sharpai_sdk.exceptions import ResourceNotFoundError, BadRequestError
 
 try:
     models = Ollama.list_models()
+    if models is None:
+        print("Failed to retrieve models or no result received")
+    else:
+        print(f"Success: Found {len(models.models)} models")
 except ResourceNotFoundError as e:
     print(f"Resource not found: {e}")
 except BadRequestError as e:
     print(f"Bad request: {e}")
 except Exception as e:
     print(f"Unexpected error: {e}")
-```
-
-## Logging
-
-The SDK includes a built-in logging system that can be configured:
-
-```python
-from sharpai_sdk.sdk_logging import set_log_level, log_info
-
-# Set logging level
-set_log_level("DEBUG")
-
-# Add log
-log_info("INFO", "This is an info message")
-```
-
-Available log levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
-
-## Advanced Configuration
-
-### Custom Timeout and Retries
-
-```python
-from sharpai_sdk import configure
-
-configure(
-    endpoint="http://localhost:8000",
-    timeout=60,    # 60 seconds timeout
-    retries=5,     # 5 retry attempts
-)
 ```
 
 ### Error Handling with Retries
@@ -592,7 +707,7 @@ The SDK automatically retries failed requests based on the configured retry coun
 - Timeout errors
 - Transient server errors (5xx status codes)
 
-## Development
+## 🛠️ Development
 
 ### Setting up Pre-commit Hooks
 
@@ -686,11 +801,11 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 Have feedback or found an issue? Please file an issue in our GitHub repository.
 
-## Version History
+## 📊 Version History
 
-Please refer to [CHANGELOG.md](CHANGELOG.md) for a detailed version history.
+Please refer to [CHANGELOG.md](CHANGELOG.md) for a detailed version history and release notes.
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License. See [LICENSE.txt](LICENSE.txt) for details.
 
